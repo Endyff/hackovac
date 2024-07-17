@@ -1,7 +1,8 @@
 import streamlit as st
 import cv2
 import numpy as np
-# import fpdf
+import fpdf
+import shutil
 
 # Constants
 GRID_NORMAL_LINE_SIZE = 1
@@ -10,6 +11,7 @@ GRID_BOLD_LINE_EVERY = 5
 GRID_BOLD_LINE_SIZE = 2
 GRID_BOLD_LINE_COLOR_BGR = (100, 20, 20)
 
+MAX_HEIGHT = 1000
 # User settings
 width_size = st.sidebar.slider('Šířka výstupu', 10, 500, 200)
 threshold = st.sidebar.slider('Práh', 0, 255, 128)
@@ -89,15 +91,21 @@ if show_grid:
 st.image(image)
 st.write(f'Rozměry: {width_size} x {height_size}')
 
-# # Produce output for crocheting 
-# gray_image = (downscale_image > 128).astype(bool) # TODO: This is hacky, should be better way to do this
+num_pages = image.shape[0] // MAX_HEIGHT + 1
 # # TODO: Figure out what is good output strategy#
-# if st.sidebar.button('Stáhnout vygenerovanou předlohu'):
-#     cv2.imwrite('output_image.jpg', cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
-#     pdf = fpdf.FPDF()
-#     pdf.add_page()
-#     pdf.image('output_image.jpg', x=10, y=10, w=100, h=100)
-#     pdf.output('output.pdf', 'F')
+if st.sidebar.button('Stáhnout vygenerovanou předlohu'):
+    pdf = fpdf.FPDF('L', 'pt', 'A4')
+    for image_part in range(num_pages):
+        subimage = image[image_part*MAX_HEIGHT:(image_part+1)*MAX_HEIGHT]
+        h, w, _ = subimage.shape
+        cv2.imwrite(f'output_image_{image_part}.jpg', cv2.cvtColor(subimage, cv2.COLOR_RGB2BGR))
+        pdf.add_page()
+        print(pdf.h)
+        print(pdf.w)
+        height = (h/1000*pdf.h - 100) 
+        # width = 
+        pdf.image(f'output_image_{image_part}.jpg', x=50, y=50, w=pdf.w-100, h=height)
+    pdf.output('output.pdf', 'F')
 
 # Hide deploy button
 st.markdown('<style>.stDeployButton {visibility: hidden}</style>', unsafe_allow_html=True)
