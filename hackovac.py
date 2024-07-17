@@ -2,7 +2,7 @@ import streamlit as st
 import cv2
 import numpy as np
 import fpdf
-import shutil
+# import io
 
 # Constants
 GRID_NORMAL_LINE_SIZE = 1
@@ -104,13 +104,13 @@ def generate_pdf():
         all_h = (h / max_height_cells) * pdf.h
         height = all_h if all_h <= pdf.h - (2*PDF_H_BORDER) else pdf.h - (2*PDF_H_BORDER)
         pdf.image(f'output_image_{image_part}.jpg', x=PDF_W_BORDER, y=PDF_H_BORDER, w=pdf.w-(2*PDF_W_BORDER), h=height)
-    pdf.output('output.pdf', 'F')
-    return open('output.pdf', 'rb')
 
-# TODO: Figure out how to delete the file after download
-# this is kind of fucked up
-# download button requires file handler, so the function returns open file handler
-# definitely not a good idea, but works
+    # this can probably be done better using io.BytesIO and saving pdf into stream
+    pdf.output('output.pdf', 'F')
+    with open('output.pdf', 'rb') as f:
+        out = f.read()
+    return out
+
 st.sidebar.download_button('Stáhnout vygenerovanou předlohu', generate_pdf(), 'Stáhn out', 'pdf')
 
 # Hide deploy button
