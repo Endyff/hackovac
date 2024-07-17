@@ -111,7 +111,7 @@ def generate_pdf():
 # this is kind of fucked up
 # download button requires file handler, so the function returns open file handler
 # definitely not a good idea, but works
-st.download_button('Stáhnout vygenerovanou předlohu', generate_pdf(), 'Stáhn out', 'pdf')
+st.sidebar.download_button('Stáhnout vygenerovanou předlohu', generate_pdf(), 'Stáhn out', 'pdf')
 
 # Hide deploy button
 st.markdown('<style>.stDeployButton {visibility: hidden}</style>', unsafe_allow_html=True)
