@@ -98,3 +98,6 @@ st.write(f'Rozměry: {width_size} x {height_size}')
 #     pdf.add_page()
 #     pdf.image('output_image.jpg', x=10, y=10, w=100, h=100)
 #     pdf.output('output.pdf', 'F')
+
+# Hide deploy button
+st.markdown('<style>.stDeployButton {visibility: hidden}</style>', unsafe_allow_html=True)
