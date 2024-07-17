@@ -11,7 +11,8 @@ GRID_BOLD_LINE_EVERY = 5
 GRID_BOLD_LINE_SIZE = 2
 GRID_BOLD_LINE_COLOR_BGR = (100, 20, 20)
 
-MAX_HEIGHT = 1000
+PDF_W_BORDER = 20
+PDF_H_BORDER = 20
 # User settings
 width_size = st.sidebar.slider('Šířka výstupu', 10, 500, 200)
 threshold = st.sidebar.slider('Práh', 0, 255, 128)
@@ -67,13 +68,13 @@ if show_grid:
 
     # Draw vertical grid lines
     for x in range(0, downscale_image.shape[1]+1):
+        x = x * cell_width
         if x % GRID_BOLD_LINE_EVERY:
             line_width = GRID_NORMAL_LINE_SIZE
             line_color = GRID_NORMAL_LINE_COLOR_BGR
         else:
             line_width = GRID_BOLD_LINE_SIZE
             line_color = GRID_BOLD_LINE_COLOR_BGR
-        x = x * cell_width
         cv2.line(image, (x, 0), (x, image.shape[0]), line_color, line_width)
 
     # Draw horizontal grid lines
@@ -91,21 +92,26 @@ if show_grid:
 st.image(image)
 st.write(f'Rozměry: {width_size} x {height_size}')
 
-num_pages = image.shape[0] // MAX_HEIGHT + 1
-# # TODO: Figure out what is good output strategy#
-if st.sidebar.button('Stáhnout vygenerovanou předlohu'):
+max_height_cells = downscale_image.shape[1] * cell_height
+def generate_pdf():
     pdf = fpdf.FPDF('L', 'pt', 'A4')
+    num_pages = image.shape[0] // max_height_cells +1
     for image_part in range(num_pages):
-        subimage = image[image_part*MAX_HEIGHT:(image_part+1)*MAX_HEIGHT]
+        subimage = image[image_part*max_height_cells:(image_part+1)*max_height_cells]
         h, w, _ = subimage.shape
         cv2.imwrite(f'output_image_{image_part}.jpg', cv2.cvtColor(subimage, cv2.COLOR_RGB2BGR))
         pdf.add_page()
-        print(pdf.h)
-        print(pdf.w)
-        height = (h/1000*pdf.h - 100) 
-        # width = 
-        pdf.image(f'output_image_{image_part}.jpg', x=50, y=50, w=pdf.w-100, h=height)
+        all_h = (h / max_height_cells) * pdf.h
+        height = all_h if all_h <= pdf.h - (2*PDF_H_BORDER) else pdf.h - (2*PDF_H_BORDER)
+        pdf.image(f'output_image_{image_part}.jpg', x=PDF_W_BORDER, y=PDF_H_BORDER, w=pdf.w-(2*PDF_W_BORDER), h=height)
     pdf.output('output.pdf', 'F')
+    return open('output.pdf', 'rb')
+
+# TODO: Figure out how to delete the file after download
+# this is kind of fucked up
+# download button requires file handler, so the function returns open file handler
+# definitely not a good idea, but works
+st.download_button('Stáhnout vygenerovanou předlohu', generate_pdf(), 'Stáhn out', 'pdf')
 
 # Hide deploy button
 st.markdown('<style>.stDeployButton {visibility: hidden}</style>', unsafe_allow_html=True)
